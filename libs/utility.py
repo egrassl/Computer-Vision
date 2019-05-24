@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 from skimage.feature import hog
 from scipy import ndimage, misc
 # Imports lista 2
-from skimage.filters import threshold_mean, threshold_otsu, threshold_yen, threshold_adaptive
+from skimage.filters import threshold_mean, threshold_otsu, threshold_yen
 
 
 def compare_images(img1, title1, img2, title2):
@@ -23,6 +23,7 @@ def img_histogram(img_gray, title):
     plt.ylabel("Number of occurrences")
     plt.hist(colors, 256, [0, 256], color='g')
     plt.show()
+    return colors
 
 
 def get_gradient(img_gray, ksize, p_sobel):
@@ -80,6 +81,7 @@ def image_gradient(img_gray, title, ksize = 5, p_sobel = False):
     plt.imshow(hog_image, cmap=plt.cm.gray)
     plt.show()
 
+
 # Calculates image gradient only for positive theta values
 def absolute_image_gradient(img_gray, title, ksize = 5, p_sobel = False):
     r = [0, 180]
@@ -103,6 +105,7 @@ def absolute_image_gradient(img_gray, title, ksize = 5, p_sobel = False):
     plt.imshow(hog_image, cmap=plt.cm.gray)
     plt.show()
 
+
 def laplacian_dist(img_gray, title, ksize = 5):
 
     laplace = ndimage.filters.laplace(img_gray, mode='wrap')
@@ -123,47 +126,60 @@ def gray_scale(img):
 
 # ====== LISTA 2 ======
 
-def sliding_window(image, stepSize, windowSize):
-    image = np.asarray(image, dtype=np.float32)
-    (winW, winH) = windowSize
+def calcEntropy(img, s_func, ent_func):
 
-    for y in range(0, image.shape[0], stepSize):
-        for x in range(0, image.shape[1], stepSize):
-            window = image[y:y + windowSize[1], x:x + windowSize[0]]
-
-            if window.shape[0] != winH or window.shape[1] != winW:
-                continue
-
-            hist = np.histogram(window.ravel(), bins=range(256), density=True)
-
-            ent = 0.0
-            for p in hist[0]:
-                if p != 0.0:
-                    ent += p * np.log(p)
-
-            image[y:y + windowSize[1], x:x + windowSize[0]] = -ent
-
-    return image
-
-
-def shannon(img, length):
-    ###################################### Shannon ######################################
-    print('Shannon')
-
-    clone = img.copy()
-    (winW, winH) = (length, length)
-
-    img_new = sliding_window(clone, stepSize=length, windowSize=(winW, winH))[:-length]
-
-    img_new = img_new[:-length]
-    thresh = threshold_mean(img_new)
-    img_new = img_new > thresh
-
-    fig, ax = plt.subplots(1, 1, figsize=(12, 8))
-
-    ax.imshow(img_new, cmap = 'viridis')
-    ax.set_title('Shannon')
-    ax.axis('off')
+    hist = img.ravel()
+    plt.xlabel("Gray Intensity")
+    plt.ylabel("Number of occurrences")
+    plt.hist(hist, 256, [0, 256], color='g')
     plt.show()
 
-    return img_new
+
+    max_ent = -999999.0
+    for i in range(1, 255):
+        h1 = [hist[p] for p in range(0, i)]
+        h1 = h1 / np.sum(h1)
+        h2 = [hist[p] for p in range(i, 256)]
+        h2 = h2 / np.sum(h2)
+
+        s1 = s_func(h1)
+        s2 = s_func(h2)
+
+        ent = ent_func(s1, s2)
+        if ent > max_ent:
+
+            max_ent = ent
+            top = i
+
+    return top
+
+
+def shannon(img):
+    s_func = lambda h: - np.sum([0.0 if h[i] == 0.0 else h[i] * np.log(h[i]) for i in range(0, len(h))])
+    ent_func = lambda sp, sq: sp + sq
+    thresh = calcEntropy(img, s_func, ent_func)
+    return img > thresh, thresh
+
+
+def tsallis(img, q):
+    s_func = lambda h: (1 - np.sum([0.0 if h[i] == 0 else h[i]**q for i in range(0, len(h))])) / (q - 1)
+    ent_func = lambda sp, sq: sp + sq + (1 - q)*sp*sq
+    thresh = calcEntropy(img, s_func, ent_func)
+    return img > thresh, thresh
+
+
+def shanon_ex(img):
+    new_img, thresh = shannon(img)
+    plt.imshow(new_img, cmap="plasma")
+
+    print("The image threshold is: " + str(thresh))
+    plt.show()
+
+
+def tsallis_ex(img, q):
+    new_img, thresh = tsallis(img, q)
+    plt.imshow(new_img, cmap="plasma")
+
+    print("The image threshold for q = " + str(q) + " is: " + str(thresh))
+    plt.show()
+
