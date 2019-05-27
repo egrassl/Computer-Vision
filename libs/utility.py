@@ -126,45 +126,72 @@ def gray_scale(img):
 
 # ====== LISTA 2 ======
 
-def calcEntropy(img, s_func, ent_func):
+def histogram(h):
+    hist = np.array(256 * [0.0])
+    for p in h:
+        hist[p] = hist[p] + 1
 
-    hist = img.ravel()
-    plt.xlabel("Gray Intensity")
-    plt.ylabel("Number of occurrences")
-    plt.hist(hist, 256, [0, 256], color='g')
-    plt.show()
+    return hist
 
+def get_entropy(hist, s_func, ent_func):
 
-    max_ent = -999999.0
-    for i in range(1, 255):
+    # hist = hist / sum(hist)
+
+    max_ent = np.NINF
+    for i in range(2, len(hist) - 1):
         h1 = [hist[p] for p in range(0, i)]
-        h1 = h1 / np.sum(h1)
-        h2 = [hist[p] for p in range(i, 256)]
-        h2 = h2 / np.sum(h2)
+        h1_total = np.sum(h1)
+        h1 = [0.0] * len(h1) if h1_total == 0.0 else h1 / h1_total
+        h2 = [hist[p] for p in range(i, len(hist))]
+        h2_total = np.sum(h2)
+        h2 = [0.0] * len(h2) if h2_total == 0.0 else h2 / h2_total
 
         s1 = s_func(h1)
         s2 = s_func(h2)
+        # s1 = calc_ent1(h1)
+        # s2 = calc_ent1(h2)
 
         ent = ent_func(s1, s2)
         if ent > max_ent:
-
             max_ent = ent
             top = i
 
     return top
 
+def calcEntropy(img, s_func, ent_func):
+
+    h = img.ravel()
+    plt.xlabel("Gray Intensity")
+    plt.ylabel("Number of occurrences")
+    plt.hist(h, 256, [0,  256], color='g')
+    plt.show()
+    hist = histogram(h)
+    return get_entropy(hist, s_func, ent_func)
+
+
+
+def calc_ent1(h):
+    ent = 0.0
+    for i in h:
+        if i != 0.0:
+            ent += i * np.log(i)
+    return - ent
+
 
 def shannon(img):
     s_func = lambda h: - np.sum([0.0 if h[i] == 0.0 else h[i] * np.log(h[i]) for i in range(0, len(h))])
     ent_func = lambda sp, sq: sp + sq
-    thresh = calcEntropy(img, s_func, ent_func)
+    hist = histogram(img.ravel())
+    thresh = calcEntropy(hist, s_func, ent_func)
     return img > thresh, thresh
 
 
 def tsallis(img, q):
-    s_func = lambda h: (1 - np.sum([0.0 if h[i] == 0 else h[i]**q for i in range(0, len(h))])) / (q - 1)
+    s_func = lambda h: (1 - np.sum([h[i]**q for i in range(0, len(h))])) / (q - 1)
     ent_func = lambda sp, sq: sp + sq + (1 - q)*sp*sq
     thresh = calcEntropy(img, s_func, ent_func)
+    #dist = dit.Distribution(img.ravel().tolist())
+    #thresh = tsallis_entropy(dist, q)
     return img > thresh, thresh
 
 
@@ -181,5 +208,34 @@ def tsallis_ex(img, q):
     plt.imshow(new_img, cmap="plasma")
 
     print("The image threshold for q = " + str(q) + " is: " + str(thresh))
+    plt.show()
+
+def tsallis_ex_2x(img, q):
+    s_func = lambda h: (1 - np.sum([h[i] ** q for i in range(0, len(h))])) / (q - 1)
+    ent_func = lambda sp, sq: sp + sq + (1 - q) * sp * sq
+
+    hist = histogram(img.ravel())
+    thresh1 = get_entropy(hist, s_func, ent_func)
+
+    #new_hist = [hist[i] for i in range(thresh1, len(hist))]
+    if thresh1 > 127:
+        new_hist = [hist[i] for i in range(0, thresh1)]
+    else:
+        new_hist = [hist[i] for i in range(thresh1, len(hist))]
+    thresh2 = get_entropy(new_hist, s_func, ent_func)
+
+    for i in range(0, len(img)):
+        for j in range(0, len(img[0])):
+            if img[i][j] >= max(thresh2, thresh1):
+                img[i][j] = 255
+            elif img[i][j] >= min(thresh2, thresh1):
+                img[i][j] = 120
+            else:
+                img[i][j] = 0
+
+    print("Thesh 1 = " + str(thresh1) + " Thresh 2 = " + str(thresh2))
+
+    plt.imshow(img, cmap="plasma")
+
     plt.show()
 
