@@ -2,6 +2,8 @@ from libs.utility import *
 import cv2
 from matplotlib import pyplot as plt
 from libs.regiongrowing import *
+from scipy.spatial.distance import directed_hausdorff
+from sklearn import metrics
 
 def run():
     ex = input("Input the exercise to execute: ")
@@ -18,6 +20,8 @@ def run():
         ex7()
     elif ex == "10":
         ex10()
+    elif ex == "12":
+        ex12()
 
 
 def ex2():
@@ -79,6 +83,8 @@ def ex10():
         for j in range(0, len(img_blur[0])):
             img_seg[i][j] = 255 if img_seg[i][j] >= thresh else 0
 
+    print("K = " + str(thresh))
+
     plt.imshow(img_seg, cmap="binary")
     plt.show()
 
@@ -86,4 +92,17 @@ def ex10():
 
     plt.imshow(opened, cmap="binary")
     plt.show()
+
+
+def ex12():
+    img1 = cv2.imread("image/japanese-temple.png", cv2.IMREAD_GRAYSCALE).ravel().tolist()
+    img2 = cv2.imread("image/japanese-temple7.png", cv2.IMREAD_GRAYSCALE)
+
+    hist1 = ut_histogram(img1)
+    hist2 = ut_histogram(img2)
+
+    #dist = metrics.mutual_info_score(hist1, hist2)
+    #dist = directed_hausdorff(hist1, hist2)
+
+    print("A distância KL das duas imagens é: " + str(dist))
 

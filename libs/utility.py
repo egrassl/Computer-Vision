@@ -133,6 +133,13 @@ def histogram(h):
 
     return hist
 
+def ut_histogram(h):
+    hist = np.array(256 * [0.0])
+    for p in h:
+        hist[p] = hist[p] + 1
+
+    return hist
+
 def get_entropy(hist, s_func, ent_func):
 
     # hist = hist / sum(hist)
@@ -239,3 +246,19 @@ def tsallis_ex_2x(img, q):
 
     plt.show()
 
+
+def KL(a, b):
+    a = np.asarray(a, dtype=np.float)
+    b = np.asarray(b, dtype=np.float)
+
+    return np.sum(np.where(a != 0 and b != 0, a * np.log(a / b), 0))
+
+def KL_2(P, Q):
+     epsilon = 0.00001
+
+     # You may want to instead make copies to avoid changing the np arrays.
+     P = P+epsilon
+     Q = Q+epsilon
+
+     divergence = np.sum(P*np.log(P/Q))
+     return divergence
