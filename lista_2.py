@@ -95,14 +95,10 @@ def ex10():
 
 
 def ex12():
-    img1 = cv2.imread("image/japanese-temple.png", cv2.IMREAD_GRAYSCALE).ravel().tolist()
+    img1 = cv2.imread("image/japanese-temple.png", cv2.IMREAD_GRAYSCALE)
     img2 = cv2.imread("image/japanese-temple7.png", cv2.IMREAD_GRAYSCALE)
 
-    hist1 = ut_histogram(img1)
-    hist2 = ut_histogram(img2)
-
-    #dist = metrics.mutual_info_score(hist1, hist2)
-    #dist = directed_hausdorff(hist1, hist2)
+    dist = d_kl(img1, img2)
 
     print("A distância KL das duas imagens é: " + str(dist))
 

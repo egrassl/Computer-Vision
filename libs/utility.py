@@ -262,3 +262,15 @@ def KL_2(P, Q):
 
      divergence = np.sum(P*np.log(P/Q))
      return divergence
+
+def d_kl(img1, img2):
+    d_kl = 0.0
+
+    hist1 = np.histogram(img1.ravel(), bins = range(256), density = True)
+    hist2 = np.histogram(img2.ravel(), bins = range(256), density = True)
+
+    for i in range(len(hist1[0])):
+        if hist1[0][i] != 0.0 and hist2[0][i] != 0.0:
+            d_kl += hist1[0][i] * np.log(hist1[0][i] / hist2[0][i])
+
+    return d_kl
