@@ -98,7 +98,30 @@ def ex12():
     img1 = cv2.imread("image/japanese-temple.png", cv2.IMREAD_GRAYSCALE)
     img2 = cv2.imread("image/japanese-temple7.png", cv2.IMREAD_GRAYSCALE)
 
+    img1 = cv2.resize(img1, (180, 142), interpolation=cv2.INTER_AREA)
+    img2 = cv2.resize(img2, (180, 142), interpolation=cv2.INTER_AREA)
+
+    plt.imshow(img1, cmap="gray")
+    plt.show()
+
     dist = d_kl(img1, img2)
 
     print("A distância KL das duas imagens é: " + str(dist))
 
+    dist = directed_hausdorff(img1, img2)[0]
+
+    print("A distância de Hausdorf é: " + str(dist))
+
+    l = max([len(img1.ravel()), len(img2.ravel())])
+    a1 = np.pad(img1.ravel(), (0, l - len(img1.ravel())), 'constant')
+    a2 = np.pad(img2.ravel(), (0, l - len(img2.ravel())), 'constant')
+
+    dist = euclidean(a1.ravel(), a2.ravel())
+    print("A distância Euclidiana é: " + str(dist))
+
+    dist = pdm_dist(img1, img2)
+    print("A distância PDM é: " + str(dist))
+
+
+def ex13():
+    print("Hi")

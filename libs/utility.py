@@ -3,6 +3,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 from skimage.feature import hog
 from scipy import ndimage, misc
+from scipy.spatial.distance import *
+import os
 # Imports lista 2
 from skimage.filters import threshold_mean, threshold_otsu, threshold_yen
 
@@ -253,6 +255,7 @@ def KL(a, b):
 
     return np.sum(np.where(a != 0 and b != 0, a * np.log(a / b), 0))
 
+
 def KL_2(P, Q):
      epsilon = 0.00001
 
@@ -262,6 +265,7 @@ def KL_2(P, Q):
 
      divergence = np.sum(P*np.log(P/Q))
      return divergence
+
 
 def d_kl(img1, img2):
     d_kl = 0.0
@@ -274,3 +278,54 @@ def d_kl(img1, img2):
             d_kl += hist1[0][i] * np.log(hist1[0][i] / hist2[0][i])
 
     return d_kl
+
+
+def pdm_dist(img1, img2):
+    def dist_min(img1, img2):
+        d_vb = 0.0
+        n = 0
+
+        for i1 in range(img1.shape[0]):
+            for j1 in range(img1.shape[1]):
+                if img1[i1][j1]:
+                    n += 1
+                    d_b = np.inf
+
+                    for i2 in range(img2.shape[0]):
+                        for j2 in range(img2.shape[1]):
+                            if img2[i2][j2]:
+                                d_new = euclidean([i1, j1], [i2, j2])
+
+                                if d_new < d_b:
+                                    d_b = d_new
+                    d_vb += d_b
+
+        return d_vb, n
+
+    d_vb1, n1 = dist_min(img1, img2)
+    d_vb2, n2 = dist_min(img2, img1)
+
+    return (d_vb1 + d_vb2) / (n1 + n2)
+
+
+def open_all_images_from(dir):
+    image_names = os.listdir(dir)
+
+    images = np.array(len(image_names))
+
+    for i in range(0, len(image_names)):
+        images[i] = cv2.imread(dir + image_names[i], cv2.IMREAD_GRAYSCALE)
+
+    return images
+
+
+def comp_confusion_matrix(images, d_func):
+    n = len(images)
+    matrix = np.array((len(images), len(images)))
+
+    for i in range(0, n):
+        for j in range(0, n):
+            matrix[i, j] = d_func(images[i], images[j])
+
+    return matrix
+
