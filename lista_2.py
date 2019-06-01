@@ -4,6 +4,12 @@ from matplotlib import pyplot as plt
 from libs.regiongrowing import *
 from scipy.spatial.distance import directed_hausdorff
 from sklearn import metrics
+from libs.RetrievalSystem import *
+from libs.RetrievalPR import *
+
+generalist_images = ["image/Generalist961/image1.jpg", "image/Generalist961/image120.jpg", "image/Generalist961/image210.jpg", "image/Generalist961/image221.jpg",
+                     "image/Generalist961/image300.jpg", "image/Generalist961/image400.jpg", "image/Generalist961/image450.jpg",
+                     "image/Generalist961/image500.jpg", "image/Generalist961/image600.jpg", "image/Generalist961/image700.jpg"]
 
 def run():
     ex = input("Input the exercise to execute: ")
@@ -22,6 +28,8 @@ def run():
         ex10()
     elif ex == "12":
         ex12()
+    elif ex == "13":
+        ex13()
 
 
 def ex2():
@@ -124,4 +132,13 @@ def ex12():
 
 
 def ex13():
+
+    ImageRet = RetrievalSystem("image/Generalist961", get_generalist_labels(), d_kl_ret)
+    #ImageRet = RetrievalSystem("image/Generalist961", get_generalist_labels(), general_dist)
+    precisions, recalls = ImageRet.retrieve_for_iamges(generalist_images)
+    pr = Retrieval_Pr(precisions, recalls)
+    #pr.plot_curves()
+    pr.plot_mean_curve()
     print("Hi")
+
+

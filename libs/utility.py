@@ -5,6 +5,7 @@ from skimage.feature import hog
 from scipy import ndimage, misc
 from scipy.spatial.distance import *
 import os
+from sklearn import metrics
 # Imports lista 2
 from skimage.filters import threshold_mean, threshold_otsu, threshold_yen
 
@@ -279,6 +280,14 @@ def d_kl(img1, img2):
 
     return d_kl
 
+def d_kl_ret(image1, image2):
+    d_kl = 0.0
+
+    for i in range(len(image1.histogram)):
+        if image1.histogram[i] != 0.0 and image2.histogram[i] != 0.0:
+            d_kl += image1.histogram[i] * np.log(image1.histogram[i] / image2.histogram[i])
+
+    return -d_kl if d_kl < 0 else d_kl
 
 def pdm_dist(img1, img2):
     def dist_min(img1, img2):
@@ -308,24 +317,38 @@ def pdm_dist(img1, img2):
     return (d_vb1 + d_vb2) / (n1 + n2)
 
 
-def open_all_images_from(dir):
-    image_names = os.listdir(dir)
-
-    images = np.array(len(image_names))
-
-    for i in range(0, len(image_names)):
-        images[i] = cv2.imread(dir + image_names[i], cv2.IMREAD_GRAYSCALE)
-
-    return images
+def general_dist(image1, image2):
+    return metrics.mutual_info_score(image1.histogram, image2.histogram)
 
 
-def comp_confusion_matrix(images, d_func):
-    n = len(images)
-    matrix = np.array((len(images), len(images)))
+def get_generalist_labels():
+    return [get_generalist_label(i) for i in range(0, 961)]
 
-    for i in range(0, n):
-        for j in range(0, n):
-            matrix[i, j] = d_func(images[i], images[j])
 
-    return matrix
+def get_generalist_label(i):
+    if i < 30:
+        return "Satelite Image"
+    elif i < 123:
+        return "Airplane"
+    elif i < 219:
+        return "Elephant"
+    elif i < 263:
+        return "Arrow"
+    elif i < 366:
+        return "Lion"
+    elif i < 434:
+        return "Gray Bear"
+    elif i < 470:
+        return "Polar Bear"
+    elif i < 509:
+        return "Human"
+    elif i < 611:
+        return "Sunset"
+    elif i < 786:
+        return "Wall texture"
+    else:
+        return "Car"
 
+def plot_pr(precision, recall):
+    plt.plot(recall, precision, 'r')
+    plt.show()
