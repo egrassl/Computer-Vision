@@ -1,3 +1,4 @@
+
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
@@ -6,6 +7,7 @@ from scipy import ndimage, misc
 from scipy.spatial.distance import *
 import os
 from sklearn import metrics
+
 # Imports lista 2
 from skimage.filters import threshold_mean, threshold_otsu, threshold_yen
 
@@ -79,7 +81,7 @@ def image_gradient(img_gray, title, ksize = 5, p_sobel = False):
     plt.show()
 
     fd, hog_image = hog(img_gray, orientations=10, pixels_per_cell=(16, 16),
-                        cells_per_block=(1, 1), visualize=True, multichannel=False)
+                        cells_per_block=(1, 1), visualize=True, multichannel=False, block_norm="L1")
 
     plt.imshow(hog_image, cmap=plt.cm.gray)
     plt.show()
@@ -135,6 +137,7 @@ def histogram(h):
         hist[p] = hist[p] + 1
 
     return hist
+
 
 def ut_histogram(h):
     hist = np.array(256 * [0.0])
@@ -268,17 +271,14 @@ def KL_2(P, Q):
      return divergence
 
 
+from libs.RetrievalImage import *
+
 def d_kl(img1, img2):
-    d_kl = 0.0
 
-    hist1 = np.histogram(img1.ravel(), bins = range(256), density = True)
-    hist2 = np.histogram(img2.ravel(), bins = range(256), density = True)
+    image1 = RetrievalImage(img1, "")
+    image2 = RetrievalImage(img2, "")
+    return d_kl_ret(image1, image2)
 
-    for i in range(len(hist1[0])):
-        if hist1[0][i] != 0.0 and hist2[0][i] != 0.0:
-            d_kl += hist1[0][i] * np.log(hist1[0][i] / hist2[0][i])
-
-    return d_kl
 
 def d_kl_ret(image1, image2):
     d_kl = 0.0
@@ -288,6 +288,16 @@ def d_kl_ret(image1, image2):
             d_kl += image1.histogram[i] * np.log(image1.histogram[i] / image2.histogram[i])
 
     return -d_kl if d_kl < 0 else d_kl
+
+def d_kl_ret_angle(image1, image2):
+    d_kl = 0.0
+
+    for i in range(len(image1.gradient_histogram)):
+        if image1.gradient_histogram[i] != 0.0 and image2.gradient_histogram[i] != 0.0:
+            d_kl += image1.gradient_histogram[i] * np.log(image1.gradient_histogram[i] / image2.gradient_histogram[i])
+
+    return -d_kl if d_kl < 0 else d_kl
+
 
 def pdm_dist(img1, img2):
     def dist_min(img1, img2):
